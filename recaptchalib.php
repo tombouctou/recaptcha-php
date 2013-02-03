@@ -42,7 +42,7 @@
  */
 define("RECAPTCHA_API_SERVER", "http://www.google.com/recaptcha/api");
 define("RECAPTCHA_API_SECURE_SERVER", "https://www.google.com/recaptcha/api");
-define("RECAPTCHA_VERIFY_SERVER", "www.google.com");
+define("RECAPTCHA_VERIFY_SERVER", "https://www.google.com");
 
 /**
  * Encodes the given data into a query string format
@@ -76,6 +76,7 @@ function _recaptcha_http_post($host, $path, $data, $port = 80) {
 	{
 		$ch = curl_init();
 		curl_setopt($ch, CURLOPT_URL, $host.$path);
+		$port = strpos($host, 'https') === 0 ? 443 : $port;
 		curl_setopt($ch, CURLOPT_PORT, $port);
 		curl_setopt($ch, CURLOPT_POST, true );
 		curl_setopt($ch, CURLOPT_POSTFIELDS, $req);
@@ -92,7 +93,8 @@ function _recaptcha_http_post($host, $path, $data, $port = 80) {
 			return false;
 		}
 
-		$response = preg_split("/[\s]+/", $result);
+		$response = //preg_split("/[\s]+/", $result);
+			$result;
 
 		return $response;
 	}
@@ -203,7 +205,7 @@ function recaptcha_check_answer ($privkey, $remoteip, $challenge, $response, $ex
 											 ) + $extra_params
 										);
 
-	$answers = explode ("\n", $response [1]);
+	$answers = explode ("\n", $response);
 	$recaptcha_response = new ReCaptchaResponse();
 
 	if (trim ($answers [0]) == 'true') {
@@ -211,7 +213,8 @@ function recaptcha_check_answer ($privkey, $remoteip, $challenge, $response, $ex
 	}
 	else {
 		$recaptcha_response->is_valid = false;
-		$recaptcha_response->error = $answers [1];
+		if (isset($answers[1]))
+			$recaptcha_response->error = $answers [1];
 	}
 	return $recaptcha_response;
 }
